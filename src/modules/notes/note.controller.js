@@ -21,7 +21,11 @@ import { Note } from "../../../db/models/note.model.js";
 
 // GET /notes
 const getAllNotes = async (req, res) => {
-    let notes = await Note.find({ user: req.user.userId })
+    let pageNumber = req.query.page || 1
+    if(pageNumber < 1) pageNumber = 1
+    const limit = 2 
+    let skip = (parseInt(pageNumber) - 1) * limit
+    let notes = await Note.find({ user: req.user.userId }).skip(skip).limit(limit)
     res.status(200).json({ message: "success", notes })
 }
 
