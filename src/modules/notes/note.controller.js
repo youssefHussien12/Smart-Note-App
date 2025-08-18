@@ -1,10 +1,12 @@
 // controllers/note.controller.js
 
 import { Note } from "../../../db/models/note.model.js";
+import { ApiFeatures } from "../../utils/apiFeatures.js";
+import { AppError } from "../../utils/AppError.js";
 
 
 // POST /notes
- const createNote = async (req, res) => {
+const createNote = async (req, res) => {
     const { title, content } = req.body;
     const userId = req.user._id;
     const note = await Note.create({
@@ -20,13 +22,11 @@ import { Note } from "../../../db/models/note.model.js";
 };
 
 // GET /notes
-const getAllNotes = async (req, res) => {
-    let pageNumber = req.query.page || 1
-    if(pageNumber < 1) pageNumber = 1
-    const limit = 2 
-    let skip = (parseInt(pageNumber) - 1) * limit
-    let notes = await Note.find({ user: req.user.userId }).skip(skip).limit(limit)
-    res.status(200).json({ message: "success", notes })
+const getAllNotes = async (req, res ,next) => {
+    let apiFeatures = new ApiFeatures(Note.find(), req.query)
+        .pagination().filter().sort().fields().search()
+    let notes = await apiFeatures.mongooseQuery   
+    res.status(200).json({ message: "success",page:apiFeatures.pageNumber, notes });
 }
 
 
@@ -46,7 +46,7 @@ const deleteNote = async (req, res) => {
     }
 
 };
-export{
+export {
     createNote,
     getAllNotes,
     deleteNote
